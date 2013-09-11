@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
-import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.os.Build;
@@ -23,7 +22,7 @@ import android.view.SurfaceView;
 public class CameraSurfaceView extends SurfaceView implements
 		SurfaceHolder.Callback {
 
-	private Camera mCamera;
+	private CameraSupport mCamera;
 	private SurfaceHolder mHolder;
 	private PreviewCallback mPreviewCallback;
 	private AutoFocusCallback mAutoFocusCallback;
@@ -33,23 +32,11 @@ public class CameraSurfaceView extends SurfaceView implements
 	public CameraSurfaceView(Context context, Camera camera,
 			PreviewCallback previewCallback, AutoFocusCallback autoFocusCallback) {
 		super(context);
-		mCamera = camera;
+		mCamera = new CameraSupport(camera);
 		mPreviewCallback = previewCallback;
 		mAutoFocusCallback = autoFocusCallback;
-
+		mCamera.setContinuousFocus(true);
 		mHolder = getHolder();
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			Camera.Parameters parameters = mCamera.getParameters();
-			for (String f : parameters.getSupportedFocusModes()) {
-				if (f == Parameters.FOCUS_MODE_CONTINUOUS_PICTURE) {
-					parameters
-							.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-					mAutoFocusCallback = null;
-					break;
-				}
-			}
-		}
 
 		mHolder = getHolder();
 		mHolder.addCallback(this);
