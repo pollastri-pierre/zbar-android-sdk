@@ -74,6 +74,7 @@ public class CameraSurfaceView extends SurfaceView implements
 		mPreviewCallback = previewCallback;
 		mAutoFocusCallback = autoFocusCallback;
 		mCamera.setContinuousFocus(true);
+		setVisibility(View.INVISIBLE);
 		setVisibility(View.VISIBLE);
 	}
 
@@ -99,7 +100,10 @@ public class CameraSurfaceView extends SurfaceView implements
 		} else {
 			height = (int) (width / aspectRatio + .5);
 		}
-		setMeasuredDimension(width, height);
+
+		mHolder.setFixedSize(width, height);
+
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
 	@Override
@@ -118,7 +122,9 @@ public class CameraSurfaceView extends SurfaceView implements
 		}
 
 		try {
-			// Hard code camera surface rotation 90 degs to match Activity view
+			// TODO Change this
+			// Hard code camera surface rotation 90 degrees to match Activity
+			// view
 			// in portrait
 			mCamera.setDisplayOrientation(90);
 			Size bestFit = getBestPreviewSize(width, height,
