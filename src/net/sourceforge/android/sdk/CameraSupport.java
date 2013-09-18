@@ -20,9 +20,9 @@ import android.view.SurfaceHolder;
  * @author Pierre Pollastri
  * 
  */
-class CameraSupport {
+public class CameraSupport {
 
-	private long CONTINUOUS_AUTO_FOCUS_FREQUENCY = 2000l;
+	private long CONTINUOUS_AUTO_FOCUS_FREQUENCY = 1000l;
 
 	private Camera mCamera;
 	private AutoFocusCallback mAutoFocusCallback;
@@ -34,6 +34,9 @@ class CameraSupport {
 	}
 
 	public void setContinuousFocus(boolean continuousFocus) {
+		if (mCamera == null) {
+			return;
+		}
 		mIsContinousAutoFocusedEnabled = continuousFocus;
 		if (hasBuiltInContinousFocus()) {
 			mIsContinousAutoFocusedEnabled = false;
@@ -47,6 +50,9 @@ class CameraSupport {
 	}
 
 	public boolean hasBuiltInContinousFocus() {
+		if (mCamera == null) {
+			return false;
+		}
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
 			Camera.Parameters parameters = mCamera.getParameters();
 			for (String f : parameters.getSupportedFocusModes()) {
@@ -67,6 +73,7 @@ class CameraSupport {
 			return;
 		}
 		try {
+			mCamera.setPreviewCallback(null);
 			mCamera.release();
 			mCamera = null;
 		} catch (Exception e) {
@@ -104,23 +111,34 @@ class CameraSupport {
 	}
 
 	public void setDisplayOrientation(int degrees) {
-		mCamera.setDisplayOrientation(degrees);
+		if (isValid()) {
+			mCamera.setDisplayOrientation(degrees);
+		}
 	}
 
 	public void setPreviewDisplay(SurfaceHolder surfaceHolder)
 			throws IOException {
-		mCamera.setPreviewDisplay(surfaceHolder);
+		if (isValid()) {
+			mCamera.setPreviewDisplay(surfaceHolder);
+		}
 	}
 
 	public void setPreviewCallback(PreviewCallback previewCallback) {
-		mCamera.setPreviewCallback(previewCallback);
+		if (isValid()) {
+			mCamera.setPreviewCallback(previewCallback);
+		}
 	}
 
 	public void startPreview() {
-		mCamera.startPreview();
+		if (isValid()) {
+			mCamera.startPreview();
+		}
 	}
 
 	public void autoFocus(AutoFocusCallback autoFocusCallback) {
+		if (!isValid()) {
+			return;
+		}
 		mAutoFocusCallback = autoFocusCallback;
 		try {
 			mCamera.autoFocus(mContinuousAutoFocusCallback);
