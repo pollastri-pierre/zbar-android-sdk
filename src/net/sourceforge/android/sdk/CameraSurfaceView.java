@@ -1,7 +1,5 @@
 package net.sourceforge.android.sdk;
 
-import java.io.IOException;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Camera;
@@ -9,8 +7,10 @@ import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.os.Build;
+import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 
 /**
  * Based on ZBar Android SDK Camera preview
@@ -47,16 +47,49 @@ public class CameraSurfaceView extends SurfaceView implements
 
 	}
 
-	public void init() {
-
+	public CameraSurfaceView(Context context) {
+		this(context, null);
+		setVisibility(View.GONE);
 	}
 
-	public void open() {
+	public CameraSurfaceView(Context context, AttributeSet attrs) {
+		this(context, attrs, 0);
+		setVisibility(View.GONE);
+	}
 
+	public CameraSurfaceView(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+		mHolder = getHolder();
+		mHolder.addCallback(this);
+
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+			mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		}
+		setVisibility(View.GONE);
+	}
+
+	public void open(PreviewCallback previewCallback,
+			AutoFocusCallback autoFocusCallback) {
+		mCamera = CameraSupport.open();
+		mPreviewCallback = previewCallback;
+		mAutoFocusCallback = autoFocusCallback;
+		mCamera.setContinuousFocus(true);
+		setVisibility(View.VISIBLE);
+	}
+
+	public void release() {
+		if (mCamera != null) {
+			mCamera.release();
+			mCamera = null;
+		}
 	}
 
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		if (mCamera == null || !mCamera.isValid()) {
+			super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+			return;
+		}
 		int height = MeasureSpec.getSize(heightMeasureSpec);
 		int width = MeasureSpec.getSize(widthMeasureSpec);
 		Size size = getBestPreviewSize(height, width, mCamera.getParameters());
@@ -72,7 +105,8 @@ public class CameraSurfaceView extends SurfaceView implements
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
-		if (mHolder.getSurface() == null) {
+		if (mHolder.getSurface() == null || mCamera == null
+				|| !mCamera.isValid()) {
 			return;
 		}
 
@@ -124,9 +158,12 @@ public class CameraSurfaceView extends SurfaceView implements
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
+		if (mCamera == null) {
+			return;
+		}
 		try {
 			mCamera.setPreviewDisplay(holder);
-		} catch (IOException e) {
+		} catch (Exception e) {
 
 		}
 	}
@@ -134,6 +171,10 @@ public class CameraSurfaceView extends SurfaceView implements
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
 
+	}
+
+	public CameraSupport getCameraSupport() {
+		return mCamera;
 	}
 
 }
